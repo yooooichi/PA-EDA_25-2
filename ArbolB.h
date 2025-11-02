@@ -6,7 +6,6 @@ const int T = 3; // Grado mínimo del árbol B
 class BTreeNode {
 public:
     int *keys;
-    int t;
     BTreeNode **C;
     int n;
     bool leaf;
@@ -72,10 +71,9 @@ public:
 // ------------------ Métodos de BTreeNode ------------------
 
 BTreeNode::BTreeNode(bool _leaf) {
-    t = T;
     leaf = _leaf;
-    keys = new int[2 * t - 1];
-    C = new BTreeNode *[2 * t];
+    keys = new int[2 * T - 1];
+    C = new BTreeNode *[2 * T];
     n = 0;
 }
 
@@ -123,7 +121,7 @@ void BTreeNode::insertNonFull(int k) {
     } else {
         while (i >= 0 && keys[i] > k)
             i--;
-        if (C[i + 1]->n == 2 * t - 1) {
+        if (C[i + 1]->n == 2 * T - 1) {
             splitChild(i + 1, C[i + 1]);
             if (keys[i + 1] < k)
                 i++;
@@ -134,17 +132,17 @@ void BTreeNode::insertNonFull(int k) {
 
 void BTreeNode::splitChild(int i, BTreeNode *y) {
     BTreeNode *z = new BTreeNode(y->leaf);
-    z->n = t - 1;
+    z->n = T - 1;
 
-    for (int j = 0; j < t - 1; j++)
-        z->keys[j] = y->keys[j + t];
+    for (int j = 0; j < T - 1; j++)
+        z->keys[j] = y->keys[j + T];
 
     if (!y->leaf) {
-        for (int j = 0; j < t; j++)
-            z->C[j] = y->C[j + t];
+        for (int j = 0; j < T; j++)
+            z->C[j] = y->C[j + T];
     }
 
-    y->n = t - 1;
+    y->n = T - 1;
 
     for (int j = n; j >= i + 1; j--)
         C[j + 1] = C[j];
@@ -154,7 +152,7 @@ void BTreeNode::splitChild(int i, BTreeNode *y) {
     for (int j = n - 1; j >= i; j--)
         keys[j + 1] = keys[j];
 
-    keys[i] = y->keys[t - 1];
+    keys[i] = y->keys[T - 1];
     n++;
 }
 
@@ -200,7 +198,7 @@ void BTreeNode::remove(int k) {
 
         bool flag = ((idx == n) ? true : false);
 
-        if (C[idx]->n < t)
+        if (C[idx]->n < T)
             fill(idx);
 
         if (flag && idx > n)
@@ -226,11 +224,11 @@ void BTreeNode::removeFromLeaf(int idx) {
 void BTreeNode::removeFromNonLeaf(int idx) {
     int k = keys[idx];
 
-    if (C[idx]->n >= t) {
+    if (C[idx]->n >= T) {
         int pred = getPred(idx);
         keys[idx] = pred;
         C[idx]->remove(pred);
-    } else if (C[idx + 1]->n >= t) {
+    } else if (C[idx + 1]->n >= T) {
         int succ = getSucc(idx);
         keys[idx] = succ;
         C[idx + 1]->remove(succ);
@@ -255,9 +253,9 @@ int BTreeNode::getSucc(int idx) {
 }
 
 void BTreeNode::fill(int idx) {
-    if (idx != 0 && C[idx - 1]->n >= t)
+    if (idx != 0 && C[idx - 1]->n >= T)
         borrowFromPrev(idx);
-    else if (idx != n && C[idx + 1]->n >= t)
+    else if (idx != n && C[idx + 1]->n >= T)
         borrowFromNext(idx);
     else {
         if (idx != n)
@@ -317,14 +315,14 @@ void BTreeNode::merge(int idx) {
     BTreeNode *child = C[idx];
     BTreeNode *sibling = C[idx + 1];
 
-    child->keys[t - 1] = keys[idx];
+    child->keys[T - 1] = keys[idx];
 
     for (int i = 0; i < sibling->n; ++i)
-        child->keys[i + t] = sibling->keys[i];
+        child->keys[i + T] = sibling->keys[i];
 
     if (!child->leaf) {
         for (int i = 0; i <= sibling->n; ++i){
-            child->C[i + t] = sibling->C[i]; //'child' adopta al hijo C[i] de 'sibling'
+            child->C[i + T] = sibling->C[i]; //'child' adopta al hijo C[i] de 'sibling'
 
             // se 'desconecta' al hijo de 'sibling'
             // para que el destructor de 'sibling' no lo borre
