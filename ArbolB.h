@@ -1,5 +1,4 @@
 #include <iostream>
-using namespace std;
 
 const int T = 3; // Grado mínimo del árbol B
 
@@ -84,7 +83,7 @@ void BTree::BTreeNode::traverse() {
     for (int i = 0; i < n; i++) {
         if (!leaf)
             C[i]->traverse();
-        cout << " " << keys[i];
+        std::cout << " " << keys[i];
     }
     if (!leaf)
         C[n]->traverse();
@@ -163,7 +162,7 @@ void BTree::BTreeNode::splitChild(int i, BTreeNode *y) {
 
 void BTree::remove(int k) {
     if (!root) {
-        cout << "Árbol vacío\n";
+        std::cout << "Árbol vacío\n";
         return;
     }
 
@@ -195,11 +194,11 @@ void BTree::BTreeNode::remove(int k) {
             removeFromNonLeaf(idx);
     } else {
         if (leaf) {
-            cout << "La clave " << k << " no existe\n";
+            std::cout << "La clave " << k << " no existe\n";
             return;
         }
 
-        bool flag = ((idx == n) ? true : false);
+        bool flag = (idx == n);
 
         if (C[idx]->n < T)
             fill(idx);
