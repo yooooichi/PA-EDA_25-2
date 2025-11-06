@@ -420,40 +420,114 @@ int BTree::BTreeNode::findKey(int k) {
     return idx;
 }
 
+// BTree::BTreeNode::removeFromLeaf
+/**
+ * Elimina una clave del índice 'idx' en un nodo HOJA.
+ * (Caso 1a de BTreeNode::remove)
+ *
+ * Simplemente desplaza todas las claves ubicadas a la derecha de 'idx'
+ * una posición hacia la izquierda.
+ *
+ * parametro idx: El índice de la clave a eliminar (keys[idx]).
+ */
 void BTree::BTreeNode::removeFromLeaf(int idx) {
+    // Desplazar claves[i] a claves[i-1]
     for (int i = idx + 1; i < n; ++i)
         keys[i - 1] = keys[i];
+
+    // Decrementar el contador de claves
     n--;
 }
 
+// BTree::BTreeNode::removeFromNonLeaf
+/**
+ * Elimina una clave del índice 'idx' en un nodo INTERNO.
+ * (Caso 1b de BTreeNode::remove)
+ *
+ * No podemos simplemente borrar 'k'. Debemos reemplazarla por su
+ * predecesor o su sucesor, y luego eliminar recursivamente
+ * ese predecesor/sucesor de su nodo original (que será una hoja).
+ *
+ * parametro idx: El índice de la clave a eliminar (k = keys[idx]).
+ */
 void BTree::BTreeNode::removeFromNonLeaf(int idx) {
-    int k = keys[idx];
+    int k = keys[idx]; // La clave a "eliminar"
 
+    // CASO A: El hijo izquierdo (C[idx]) tiene suficientes claves (>= T)
+    //         para ceder su clave más grande (el predecesor)
     if (C[idx]->n >= T) {
+        // 1. Encontrar el predecesor de 'k' (la clave más grande en C[idx])
         int pred = getPred(idx);
+
+        // 2. Reemplazar 'k' (keys[idx]) con su predecesor
         keys[idx] = pred;
+
+        // 3. Eliminar recursivamente el predecesor de su subárbol (C[idx])
         C[idx]->remove(pred);
-    } else if (C[idx + 1]->n >= T) {
+    } 
+    // CASO B: El hijo derecho (C[idx+1]) tiene suficientes claves (>= T)
+    //         para ceder su clave más pequeña (el sucesor)
+    else if (C[idx + 1]->n >= T) {
+        // 1. Encontrar el sucesor de 'k' (la clave más pequeña en C[idx+1])
         int succ = getSucc(idx);
+
+        // 2. Reemplazar 'k' (keys[idx]) con su sucesor
         keys[idx] = succ;
+
+        // 3. Eliminar recursivamente el sucesor de su subárbol (C[idx+1])
         C[idx + 1]->remove(succ);
-    } else {
+    } 
+    // CASO C: Ambos hijos (C[idx] y C[idx+1]) tienen el MÍNIMO de claves (T-1).
+    //         No podemos tomar de ninguno. Debemos fusionarlos.
+    else {
+        // 1. Fusionar (merge) el hijo C[idx+1] dentro de C[idx].
+        //    La clave 'k' (keys[idx]) también baja al nodo fusionado C[idx]
         merge(idx);
+        // 2. Ahora que 'k' está en el nodo C[idx] (que está medio lleno),
+        //    eliminamos 'k' recursivamente de ese nodo
         C[idx]->remove(k);
     }
 }
 
+// BTree::BTreeNode::getPred
+/**
+ * Obtiene el predecesor (predecessor) de la clave en keys[idx].
+ *
+ * El predecesor es la clave *más grande* en el subárbol
+ * que está a la izquierda de keys[idx] (es decir, el subárbol C[idx]).
+ *
+ * parametro idx: El índice de la clave (keys[idx]).
+ * retorna int: El valor de la clave predecesora.
+ */
 int BTree::BTreeNode::getPred(int idx) {
+    // 1. Empezar en el hijo izquierdo (C[idx])
     BTreeNode *cur = C[idx];
+    // 2. Descender por el camino más a la derecha hasta llegar a una hoja
     while (!cur->leaf)
-        cur = cur->C[cur->n];
+        cur = cur->C[cur->n]; // El hijo más a la derecha
+
+    // 3. Devolver la última clave (la más grande) de esa hoja
     return cur->keys[cur->n - 1];
 }
 
+// BTree::BTreeNode::getSucc
+/**
+ * Obtiene el sucesor (successor) de la clave en keys[idx].
+ *
+ * El sucesor es la clave *más pequeña* en el subárbol
+ * que está a la derecha de keys[idx] (es decir, el subárbol C[idx+1]).
+ *
+ * parametro idx: El índice de la clave (keys[idx]).
+ * retorna int: El valor de la clave sucesora.
+ */
 int BTree::BTreeNode::getSucc(int idx) {
+    // 1. Empezar en el hijo derecho (C[idx+1])
     BTreeNode *cur = C[idx + 1];
+    // 2. Descender por el camino más a la izquierda hasta llegar a una hoja
     while (!cur->leaf)
-        cur = cur->C[0];
+        cur = cur->C[0]; // El hijo más a la izquierda
+
+    // 3. Devolver la primera clave (la más pequeña) de esa hoja
     return cur->keys[0];
 }
 
