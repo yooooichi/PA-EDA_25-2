@@ -531,74 +531,155 @@ int BTree::BTreeNode::getSucc(int idx) {
     return cur->keys[0];
 }
 
+// BTree::BTreeNode::fill
+/**
+ * "Rellena" un hijo C[idx] que tiene el mínimo de claves (T-1).
+ *
+ * Esta función es llamada por 'remove' ANTES de descender a C[idx].
+ * Decide si pedir prestado (borrow) a un hermano o fusionar (merge)
+ * con un hermano para asegurar que C[idx] tenga al menos T claves.
+ *
+ * parametro idx: El índice del hijo (C[idx]) que necesita ser rellenado.
+ */
 void BTree::BTreeNode::fill(int idx) {
+    // CASO 1: El hermano izquierdo C[idx-1] es "rico" (>= T claves)
+    //         Pedir prestado (borrow) de él
     if (idx != 0 && C[idx - 1]->n >= T)
         borrowFromPrev(idx);
+
+    // CASO 2: El hermano derecho C[idx+1] es "rico" (>= T claves)
+    //         Pedir prestado (borrow) de él
     else if (idx != n && C[idx + 1]->n >= T)
         borrowFromNext(idx);
+    
+    // CASO 3: Ambos hermanos son "pobres" (tienen T-1 claves)
+    //         Fusionar (merge) C[idx] con uno de sus hermanos
     else {
+        // Si C[idx] no es el último hijo, fusionarlo con su
+        // hermano derecho (C[idx+1])
         if (idx != n)
             merge(idx);
+        // Si C[idx] es el último hijo, fusionarlo con su
+        // hermano izquierdo (C[idx-1])
         else
             merge(idx - 1);
     }
 }
 
+// --- En BTree::BTreeNode::borrowFromPrev ---
+/**
+ * Pide prestada una clave del hermano izquierdo (C[idx-1]).
+ *
+ * Realiza una rotación:
+ * 1. La última clave del hermano izquierdo C[idx-1] asciende al padre.
+ * 2. La clave del padre keys[idx-1] desciende a C[idx] (hijo).
+ *
+ * parametro idx: El índice del hijo (C[idx]) que recibe la clave.
+ */
 void BTree::BTreeNode::borrowFromPrev(int idx) {
     BTreeNode *child = C[idx];
     BTreeNode *sibling = C[idx - 1];
 
+    // 1. Desplazar todas las claves en 'child' (C[idx]) una
+    //    posición a la derecha para hacer espacio en keys[0]
     for (int i = child->n - 1; i >= 0; --i)
         child->keys[i + 1] = child->keys[i];
 
+    // 2. Si 'child' no es hoja, desplazar sus punteros a hijo
+    //    una posición a la derecha para C[0]
     if (!child->leaf) {
         for (int i = child->n; i >= 0; --i)
             child->C[i + 1] = child->C[i];
     }
 
+    // 3. La clave del padre (keys[idx-1]) desciende a la
+    //    primera posición de 'child'
     child->keys[0] = keys[idx - 1];
 
+    // 4. Si no es hoja, el último hijo de 'sibling' (izquierdo)
+    //    se convierte en el primer hijo de 'child' (derecho)
     if (!child->leaf)
         child->C[0] = sibling->C[sibling->n];
 
+    // 5. La última clave de 'sibling' (izquierdo) asciende
+    //    para reemplazar a la clave del padre
     keys[idx - 1] = sibling->keys[sibling->n - 1];
 
+    // 6. Actualizar contadores de claves
     child->n += 1;
     sibling->n -= 1;
 }
 
+// --- En BTree::BTreeNode::borrowFromNext ---
+/**
+ * Pide prestada una clave del hermano derecho (C[idx+1]).
+ *
+ * Realiza una rotación:
+ * 1. La primera clave del hermano derecho C[idx+1] asciende al padre.
+ * 2. La clave del padre keys[idx] desciende a C[idx] (hijo).
+ *
+ * parametro idx: El índice del hijo (C[idx]) que recibe la clave.
+ */
 void BTree::BTreeNode::borrowFromNext(int idx) {
     BTreeNode *child = C[idx];
     BTreeNode *sibling = C[idx + 1];
 
+    // 1. La clave del padre (keys[idx]) desciende a la
+    //    última posición de 'child'
     child->keys[child->n] = keys[idx];
 
+    // 2. Si no es hoja, el primer hijo de 'sibling' (derecho)
+    //    se convierte en el último hijo de 'child'
     if (!(child->leaf))
         child->C[child->n + 1] = sibling->C[0];
 
+    // 3. La primera clave de 'sibling' (derecho) asciende
+    //    para reemplazar a la clave del padre
     keys[idx] = sibling->keys[0];
 
+    // 4. Desplazar todas las claves en 'sibling' una
+    //    posición a la izquierda (porque keys[0] subió)
     for (int i = 1; i < sibling->n; ++i)
         sibling->keys[i - 1] = sibling->keys[i];
 
+    // 5. Si no es hoja, desplazar los punteros a hijo de 'sibling'
+    //    una posición a la izquierda
     if (!sibling->leaf) {
         for (int i = 1; i <= sibling->n; ++i)
             sibling->C[i - 1] = sibling->C[i];
     }
 
+    // 6. Actualizar contadores de claves
     child->n += 1;
     sibling->n -= 1;
 }
 
+// BTree::BTreeNode::merge
+/**
+ * Fusiona (merge) el hijo C[idx] con su hermano C[idx+1].
+ *
+ * La operación "baja" la clave keys[idx] del padre al nodo C[idx]
+ * y mueve todas las claves e hijos del nodo C[idx+1] también
+ * a C[idx]. El nodo C[idx+1] (sibling) es borrado.
+ *
+ * parametro idx: El índice del hijo (C[idx]) en el que se fusionará el otro.
+ */
 void BTree::BTreeNode::merge(int idx) {
     BTreeNode *child = C[idx];
     BTreeNode *sibling = C[idx + 1];
 
+    // 1. Bajar la clave del padre (keys[idx]) a C[idx].
+    //    Se coloca al final de las claves actuales de 'child'
+    //    (que sabemos es la posición T-1)
     child->keys[T - 1] = keys[idx];
 
+    // 2. Copiar todas las claves de 'sibling' (C[idx+1])
+    //    al final de 'child' (C[idx])
     for (int i = 0; i < sibling->n; ++i)
         child->keys[i + T] = sibling->keys[i];
 
+    // 3. Si no son hojas, copiar todos los punteros a hijo
+    //    de 'sibling' al final de 'child'
     if (!child->leaf) {
         for (int i = 0; i <= sibling->n; ++i){
             child->C[i + T] = sibling->C[i]; //'child' adopta al hijo C[i] de 'sibling'
@@ -609,15 +690,22 @@ void BTree::BTreeNode::merge(int idx) {
         }
     }
 
+    // 4. Llenar el "hueco" en el nodo padre (this)
+    //    desplazando las claves a la derecha de 'idx' hacia la izquierda
     for (int i = idx + 1; i < n; ++i)
         keys[i - 1] = keys[i];
 
+    // 5. Llenar el "hueco" de punteros a hijo en el nodo padre
+    //    desplazándolos hacia la izquierda
     for (int i = idx + 2; i <= n; ++i)
         C[i - 1] = C[i];
 
+    // 6. Actualizar contadores de claves.
+    //    C[idx] ahora tiene (T-1) + (T-1) + 1 (clave del padre) = 2T-1 claves
     child->n += sibling->n + 1;
-    n--;
+    n--; // El padre pierde una clave
 
+    // 7. Borrar el nodo 'sibling' (hermano derecho), que ya está vacío
     delete sibling;
 }
 
