@@ -34,13 +34,13 @@ proyecto/
 │   ├── persona.h           # Clase Persona
 │   ├── generador_datos.h   # Generador de datos sintéticos
 │   ├── persistencia.h      # Manejo de archivos
-│   └── ArbolB.h           # Implementación del Árbol B
+│   └── arbol_b.h           # Implementación del Árbol B
 ├── src/
 │   ├── main.cpp            # Programa principal
 │   ├── persona.cpp
 │   ├── generador_datos.cpp
 │   ├── persistencia.cpp
-│   └── ArbolB.cpp
+│   └── arbol_b.cpp
 ├── data/                   # Archivos de datos (se crea automáticamente)
 ├── bin/                    # Ejecutables (se crea automáticamente)
 ├── Makefile
@@ -191,13 +191,13 @@ Posibles mejoras:
 Autores
 Grupo [NÚMERO 4]
 
-Borda Bernaola, Ronald Meliton
-Caso Egoavil, Pedro Yuichi
-Chanca Melgar, Yarel Joshua
-Fernandez Totocayo, Henry Daniel
+BORDA BERNAOLA, RONALD MELITON
+CASO EGOAVIL, PEDRO YUICHI
+CHANCA MELGAR, YAREL JOSHUA
+FERNANDEZ TOTOCAYO, HENRY DANIEL
 Curso: Estructura de Datos Avanzada
 Institución: [USIL]
-Año: 2025-2
+Año: 2025
 
 Referencias
 Cormen, T. H., et al. (2009). "Introduction to Algorithms" (3rd ed.). MIT Press.
