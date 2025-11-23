@@ -31,7 +31,7 @@ void Persona::MostrarPersona() const {
     cout << "Apellidos: " << Apellidos << endl;
     cout << "Nacionalidad: " << Nacionalidad << endl;
     cout << "Lugar de nacimiento: " << Lugar_Nacimiento << endl;
-    cout << "Dirección: " << Direccion << endl;
+    cout << "Direccion: " << Direccion << endl;
     cout << "Telefono: " << Telefono << endl;
     cout << "Correo: " << Correo << endl;
     cout << "Estado civil: " << Estado_C << endl;
