@@ -6,6 +6,7 @@
 #include <chrono>
 #include <iomanip>
 #include <fstream>
+#include <Windows.h>
 using namespace std;
 
 /**
@@ -53,24 +54,38 @@ int main() {
         switch(opcion) {
             case 1:
                 generarNuevosRegistros();
+                Sleep(6007);
+                system("cls"); 
                 break;
             case 2:
                 buscarPorDNI();
+                Sleep(6007);
+                system("cls"); 
                 break;
             case 3:
                 insertarRegistro();
+                Sleep(6007);
+                system("cls"); 
                 break;
             case 4:
                 eliminarRegistro();
+                Sleep(6007);
+                system("cls"); 
                 break;
             case 5:
                 mostrarEstadisticas();
+                Sleep(6007);
+                system("cls"); 
                 break;
             case 6:
                 realizarBenchmark();
+                Sleep(6007);
+                system("cls"); 
                 break;
             case 7:
                 guardarYSalir();
+                Sleep(6007);
+                system("cls"); 
                 break;
             default:
                 if (opcion != 7) {
@@ -124,7 +139,7 @@ void generarNuevosRegistros() {
     int cantidad;
     cout << "\n--- GENERACION DE REGISTROS ---" << endl;
     cout << "Registros actuales: " << arbolGlobal->obtenerNumRegistros() << endl;
-    cout << "¿Cuantos registros desea generar? (recomendado: 100000): ";
+    cout << "¿Cuantos registros desea generar? : ";
     cin >> cantidad;
     
     if (cantidad <= 0) {
@@ -163,7 +178,7 @@ void generarNuevosRegistros() {
 void buscarPorDNI() {
     string dni;
     cout << "\n--- BUSQUEDA POR DNI ---" << endl;
-    cout << "Ingrese el DNI (8 dígitos): ";
+    cout << "Ingrese el DNI (8 digitos): ";
     cin >> dni;
     
     auto inicio = chrono::high_resolution_clock::now();
@@ -172,7 +187,7 @@ void buscarPorDNI() {
     
     auto duracion = chrono::duration_cast<chrono::microseconds>(fin - inicio);
     
-    cout << "\nTiempo de búsqueda: " << duracion.count() << " microsegundos" << endl;
+    cout << "\nTiempo de busqueda: " << duracion.count() << " microsegundos" << endl;
     
     if (resultado != nullptr) {
         cout << "\nREGISTRO ENCONTRADO:" << endl;
@@ -260,11 +275,11 @@ void mostrarEstadisticas() {
     cout << "Grado minimo (T): " << T << endl;
     cout << "Claves por nodo: " << (T-1) << " a " << (2*T-1) << endl;
     cout << "\nCOMPLEJIDAD ALGORITMICA (Big O):" << endl;
-    cout << "- Búsqueda:    O(log n)" << endl;
-    cout << "- Inserción:   O(log n)" << endl;
-    cout << "- Eliminación: O(log n)" << endl;
+    cout << "- Busqueda:    O(log n)" << endl;
+    cout << "- Insercion:   O(log n)" << endl;
+    cout << "- Eliminacion: O(log n)" << endl;
     cout << "\nDonde n = numero de registros" << endl;
-    cout << "Log base " << T << " (debido al grado del árbol)" << endl;
+    cout << "Log base " << T << " (debido al grado del arbol)" << endl;
     cout << "========================================" << endl;
 }
 
@@ -278,82 +293,78 @@ void realizarBenchmark() {
         return;
     }
     
-    const int NUM_PRUEBAS = 1000;
+    const int NUM_PRUEBAS = 1000000;
     GeneradorDatos generador;
     
     // Benchmark de BÚSQUEDA
     cout << "\n1. BENCHMARK DE BUSQUEDA (" << NUM_PRUEBAS << " busquedas):" << endl;
     
-    long long tiempoTotalBusqueda = 0;
     int busquedasExitosas = 0;
     
     // Obtener algunos DNIs existentes
     vector<Persona*> personas = arbolGlobal->obtenerTodasPersonas();
     
+    auto inicio = chrono::high_resolution_clock::now();
     for (size_t i = 0; i < NUM_PRUEBAS && i < personas.size(); i++) {
         string dni = personas[i]->getDNI();
         
-        auto inicio = chrono::high_resolution_clock::now();
-        Persona* resultado = arbolGlobal->buscar(dni);
-        auto fin = chrono::high_resolution_clock::now();
         
-        auto duracion = chrono::duration_cast<chrono::microseconds>(fin - inicio);
-        tiempoTotalBusqueda += duracion.count();
+        Persona* resultado = arbolGlobal->buscar(dni);
         
         if (resultado != nullptr) {
             busquedasExitosas++;
         }
     }
+    auto fin = chrono::high_resolution_clock::now();
+    auto duracion = chrono::duration_cast<chrono::microseconds>(fin - inicio);
     
-    cout << "   - Tiempo promedio: " << (tiempoTotalBusqueda / NUM_PRUEBAS) << " µs" << endl;
-    cout << "   - Búsquedas exitosas: " << busquedasExitosas << " / " << NUM_PRUEBAS << endl;
+    cout << "   - Tiempo promedio: " << duracion.count() << " microsegundos" << endl;
+    cout << "   - Busquedas exitosas: " << busquedasExitosas << " / " << NUM_PRUEBAS << endl;
     
     // Benchmark de INSERCIÓN
-    cout << "\n2. BENCHMARK DE INSERCION (100 inserciones):" << endl;
-    
-    long long tiempoTotalInsercion = 0;
-    
-    for (int i = 0; i < 100; i++) {
+    cout << "\n2. BENCHMARK DE INSERCION (100000 inserciones):" << endl;
+
+
+    auto inicio1 = chrono::high_resolution_clock::now();
+    for (int i = 0; i < 100000; i++) {
         Persona* p = new Persona();
         *p = generador.generarPersona();
         
-        auto inicio = chrono::high_resolution_clock::now();
-        arbolGlobal->insertar(p);
-        auto fin = chrono::high_resolution_clock::now();
         
-        auto duracion = chrono::duration_cast<chrono::microseconds>(fin - inicio);
-        tiempoTotalInsercion += duracion.count();
+        arbolGlobal->insertar(p);
+        
+        
+        
     }
-    
-    cout << "   - Tiempo promedio: " << (tiempoTotalInsercion / 100) << " µs" << endl;
+    auto fin1 = chrono::high_resolution_clock::now();
+    auto duracion1 = chrono::duration_cast<chrono::microseconds>(fin1 - inicio1);
+    cout << "   - Tiempo promedio: " << duracion1.count() << " microsegundos" << endl;
     
     // Benchmark de ELIMINACIÓN
-    cout << "\n3. BENCHMARK DE ELIMINACION (100 eliminaciones):" << endl;
+    cout << "\n3. BENCHMARK DE ELIMINACION (100000 eliminaciones):" << endl;
     
-    long long tiempoTotalEliminacion = 0;
     
-    for (size_t i = 0; i < 100 && i < personas.size(); i++) {
+    auto inicio2 = chrono::high_resolution_clock::now();
+    for (size_t i = 0; i < 1000000 && i < personas.size(); i++) {
         string dni = personas[personas.size() - 1 - i]->getDNI();
         
-        auto inicio = chrono::high_resolution_clock::now();
-        arbolGlobal->eliminar(dni);
-        auto fin = chrono::high_resolution_clock::now();
         
-        auto duracion = chrono::duration_cast<chrono::microseconds>(fin - inicio);
-        tiempoTotalEliminacion += duracion.count();
+        arbolGlobal->eliminar(dni);
+        
+        
+        
     }
-    
-    cout << "   - Tiempo promedio: " << (tiempoTotalEliminacion / 100) << " µs" << endl;
+    auto fin2 = chrono::high_resolution_clock::now();
+    auto duracion2 = chrono::duration_cast<chrono::microseconds>(fin2 - inicio2);
+    cout << "   - Tiempo promedio: " << duracion2.count() << " microsegundos" << endl;
     
     cout << "\n========================================" << endl;
     cout << "ANALISIS DE COMPLEJIDAD ESPACIAL:" << endl;
     cout << "----------------------------------------" << endl;
     long long registros = arbolGlobal->obtenerNumRegistros();
     long long bytesPersona = sizeof(Persona);
-    long long bytesNodo = sizeof(long long) * (2*T-1) + sizeof(void*) * (2*T-1 + 2*T);
     
     cout << "Memoria por registro: ~" << bytesPersona << " bytes" << endl;
-    cout << "Memoria por nodo interno: ~" << bytesNodo << " bytes" << endl;
     cout << "Total de registros: " << registros << endl;
     cout << "Memoria aproximada: ~" << (registros * bytesPersona / 1024 / 1024) << " MB" << endl;
     cout << "========================================" << endl;
